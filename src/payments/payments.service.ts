@@ -71,7 +71,7 @@ export class PaymentsService {
       response.status(400).send(`Webhook Error: ${error.message}`);
       return;
     }
-    console.log(event.type, 'tipo');
+
     switch (event.type) {
       case 'charge.succeeded': {
         const chargeSucceded = event.data.object;

@@ -1,0 +1,43 @@
+# Dependencies
+FROM node:21-alpine3.19 as deps
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install
+
+
+# Builder - Build the App
+FROM node:21-alpine3.19 as build
+
+WORKDIR /usr/src/app
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+
+COPY . .
+
+# RUN npm run test, this will be implemented in the future 
+RUN npm run build
+
+# Delete Module files that are not in use
+RUN npm ci -f --only=production && npm cache clean --force
+
+
+# Final - Creation of Docker Image
+FROM node:21-alpine3.19 as prod
+
+WORKDIR /usr/src/app
+
+COPY --from=build /usr/src/app/node_modules ./node_modules
+
+# Copy the Dist folder
+COPY --from=build /usr/src/app/dist ./dist
+
+ENV NODE_ENV=production
+
+USER node
+
+EXPOSE 3000
+
+CMD [ "node", "dist/main.js" ]
